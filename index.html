@@ -1378,6 +1378,19 @@
       background: #293244 !important;
     }
 
+    html[data-theme="dark"] #webchat .webchat__bubble--from-user > div,
+    html[data-theme="dark"] #webchat .webchat__bubble--from-user .webchat__bubble__content {
+      color: #f1f5f9 !important;
+      background: #293244 !important;
+    }
+
+    html[data-theme="dark"] #webchat .webchat__bubble--from-user .webchat__text-content,
+    html[data-theme="dark"] #webchat .webchat__bubble--from-user .webchat__text-content *,
+    html[data-theme="dark"] #webchat .webchat__bubble--from-user .webchat__render-markdown,
+    html[data-theme="dark"] #webchat .webchat__bubble--from-user .webchat__render-markdown * {
+      color: #f1f5f9 !important;
+    }
+
     html[data-theme="dark"] .instant-greeting-message,
     html[data-theme="dark"] #webchat .webchat__text-content,
     html[data-theme="dark"] #webchat .webchat__render-markdown,
@@ -2592,11 +2605,11 @@
             bubbleBackground: 'transparent',
             bubbleBorderColor: 'transparent',
             bubbleBorderRadius: 0,
-            bubbleFromUserBackground: '#ececec',
+            bubbleFromUserBackground: 'transparent',
             bubbleFromUserBorderColor: 'transparent',
             bubbleFromUserBorderRadius: 16,
             bubbleFromUserNubSize: 0,
-            bubbleFromUserTextColor: '#202020',
+            bubbleFromUserTextColor: 'inherit',
             bubbleMinHeight: 32,
             bubbleMaxWidth: 760,
             botAvatarBackgroundColor: 'transparent',
