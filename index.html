@@ -2266,22 +2266,29 @@
           if (action.type === 'DIRECT_LINE/POST_ACTIVITY') {
             const activity = action.payload && action.payload.activity;
             const kind = activity?.channelData?.schoolAI?.kind;
-            if (activity && activity.type === 'message' && activity.from?.role === 'user' && activity.text && !kind) {
-              const displayText = cleanText(activity.text);
+            const messageText = cleanText(activity?.text).trim();
+            const hasAttachments = Array.isArray(activity?.attachments) && activity.attachments.length > 0;
+            // DIRECT_LINE/POST_ACTIVITY는 브라우저에서 서버로 보내는 활동입니다.
+            // Web Chat 버전에 따라 이 시점의 activity.from이 비어 있을 수 있으므로
+            // from.role에 의존하지 않고, 일반 메시지와 파일 첨부에 모두 라우팅 정보를 넣습니다.
+            if (activity?.type === 'message' && !kind && (messageText || hasAttachments)) {
+              const displayText = messageText || '첨부 파일';
+              const promptText = messageText || '첨부한 파일을 선택한 에이전트로 분석해 주세요.';
               action = {
                 ...action,
                 payload: {
                   ...action.payload,
                   activity: {
                     ...activity,
-                    text: buildRoutedPrompt(displayText, conversation.route),
+                    text: buildRoutedPrompt(promptText, conversation.route),
                     channelData: {
                       ...(activity.channelData || {}),
                       schoolAI: {
                         kind: 'routed-user-message',
                         displayText,
                         route: conversation.route,
-                        target: routeById(conversation.route).target
+                        target: routeById(conversation.route).target,
+                        hasAttachments
                       }
                     }
                   }
