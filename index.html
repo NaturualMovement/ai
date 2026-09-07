@@ -820,6 +820,29 @@
       width: 100% !important;
       max-width: 100% !important;
     }
+    .schoolai-response-block > .webchat__bubble {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    .responder-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      margin: 7px 0 2px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      color: #475467;
+      background: #f2f4f7;
+      font-size: 10.5px;
+      font-weight: 650;
+      line-height: 1.2;
+    }
+
+    .responder-badge.verified {
+      color: #3d4eb8;
+      background: rgba(79, 106, 240, .11);
+    }
 
     .response-duration:empty { display: none; }
 
@@ -1414,6 +1437,10 @@
             durationMs: Math.max(0, Number(message.durationMs) || 0),
             responderRoute: routeById(message.responderRoute).id,
             carried: Boolean(message.carried)
+            durationMs: Math.max(0, Number(message.durationMs) || 0),
+            responderRoute: routeById(message.responderRoute).id,
+            responderVerified: Boolean(message.responderVerified),
+            carried: Boolean(message.carried)
           })).filter(message => message.text) : []
         })).filter(hasSubmittedUserMessage).slice(0, 100);
       } catch (_) {
@@ -1559,6 +1586,14 @@
         carried: false
       });
       if (role === 'assistant') conversation.lastResponderRoute = routeById(options.responderRoute).id;
+        durationMs: role === 'assistant' ? Math.max(0, Number(options.durationMs) || 0) : 0,
+        responderRoute: role === 'assistant' ? routeById(options.responderRoute).id : 'auto',
+        responderVerified: role === 'assistant' && Boolean(options.responderVerified),
+        carried: false
+      });
+      if (role === 'assistant' && options.responderVerified) {
+        conversation.lastResponderRoute = routeById(options.responderRoute).id;
+      }
       conversation.messages = conversation.messages.slice(-300);
       conversation.updatedAt = Date.now();
       refreshConversationTitle(conversation);
@@ -1713,6 +1748,18 @@
       const tools = document.createElement('div');
       tools.className = archive ? 'archive-response-tools' : 'schoolai-response-tools';
       const duration = document.createElement('span');
+    function createResponseTools(text, durationMs, responderRoute = 'auto', responderVerified = false, archive = false) {
+      const tools = document.createElement('div');
+      tools.className = archive ? 'archive-response-tools' : 'schoolai-response-tools';
+      const responder = document.createElement('span');
+      responder.className = 'responder-badge' + (responderVerified ? ' verified' : '');
+      responder.textContent = responderVerified
+        ? '응답 모델 · ' + routeById(responderRoute).label
+        : '응답 모델 · 확인되지 않음';
+      responder.title = responderVerified
+        ? '부모 에이전트가 응답 표식으로 확인한 모델입니다.'
+        : '부모 에이전트의 응답 표식이 없어 실제 응답 모델을 확인하지 못했습니다.';
+      const duration = document.createElement('span');
       duration.className = 'response-duration';
       duration.textContent = formatResponseDuration(durationMs);
       const copyButton = document.createElement('button');
@@ -1722,10 +1769,12 @@
       copyButton.title = '복사';
       copyButton.addEventListener('click', () => copyResponseText(text, copyButton));
       tools.append(duration, copyButton);
+      tools.append(responder, duration, copyButton);
       return tools;
     }
 
     function decorateLatestAssistantActivity(webChatMount, text, durationMs, attempt = 0) {
+    function decorateLatestAssistantActivity(webChatMount, text, durationMs, responderRoute = 'auto', responderVerified = false, attempt = 0) {
       if (!webChatMount) return;
       const greetingText = cleanText(CONFIG.GREETING_MESSAGE).replace(/\s+/g, ' ').trim();
       const expectedText = cleanText(text).replace(/\s+/g, ' ').trim();
@@ -1753,6 +1802,12 @@
         return;
       }
       if (attempt < 30) setTimeout(() => decorateLatestAssistantActivity(webChatMount, text, durationMs, attempt + 1), 50);
+        block.append(bubble, createResponseTools(text, durationMs, responderRoute, responderVerified));
+        return;
+      }
+      if (attempt < 30) {
+        setTimeout(() => decorateLatestAssistantActivity(webChatMount, text, durationMs, responderRoute, responderVerified, attempt + 1), 50);
+      }
     }
 
     function setStatus(kind, label) {
@@ -1943,6 +1998,9 @@
           bubble.className = 'archive-bubble'; bubble.textContent = message.text;
           row.append(role, bubble);
           if (message.role === 'assistant') row.append(createResponseTools(message.text, message.durationMs, true));
+          if (message.role === 'assistant') {
+            row.append(createResponseTools(message.text, message.durationMs, message.responderRoute, message.responderVerified, true));
+          }
           view.append(row);
         });
       }
@@ -2076,6 +2134,10 @@
         });
         if (message.role === 'assistant') {
           setTimeout(() => decorateLatestAssistantActivity(webChatMount, message.text, message.durationMs || 0), 40 + index * 8);
+          setTimeout(() => decorateLatestAssistantActivity(
+            webChatMount, message.text, message.durationMs || 0,
+            message.responderRoute, message.responderVerified, 0
+          ), 40 + index * 8);
         }
       });
       return true;
@@ -2201,6 +2263,10 @@
                 addMessage('assistant', responder.text, {
                   durationMs,
                   responderRoute: confirmedResponderRoute
+                addMessage('assistant', responder.text, {
+                  durationMs,
+                  responderRoute: responder.route,
+                  responderVerified: responder.route !== 'auto'
                 });
                 const cleanAction = responder.text === activity.text ? action : {
                   ...action,
@@ -2211,6 +2277,10 @@
                 };
                 const result = next(cleanAction);
                 requestAnimationFrame(() => decorateLatestAssistantActivity(webChatMount, responder.text, durationMs));
+                requestAnimationFrame(() => decorateLatestAssistantActivity(
+                  webChatMount, responder.text, durationMs,
+                  responder.route, responder.route !== 'auto'
+                ));
                 return result;
               }
             }
