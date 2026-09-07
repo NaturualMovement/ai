@@ -820,10 +820,6 @@
       width: 100% !important;
       max-width: 100% !important;
     }
-    .schoolai-response-block > .webchat__bubble {
-      width: 100% !important;
-      max-width: 100% !important;
-    }
 
     .responder-badge {
       display: inline-flex;
@@ -1436,9 +1432,6 @@
             at: Number(message.at) || Date.now(),
             durationMs: Math.max(0, Number(message.durationMs) || 0),
             responderRoute: routeById(message.responderRoute).id,
-            carried: Boolean(message.carried)
-            durationMs: Math.max(0, Number(message.durationMs) || 0),
-            responderRoute: routeById(message.responderRoute).id,
             responderVerified: Boolean(message.responderVerified),
             carried: Boolean(message.carried)
           })).filter(message => message.text) : []
@@ -1581,11 +1574,6 @@
         role,
         text: safeText,
         at: Date.now(),
-        durationMs: role === 'assistant' ? Math.max(0, Number(options.durationMs) || 0) : 0,
-        responderRoute: role === 'assistant' ? routeById(options.responderRoute).id : 'auto',
-        carried: false
-      });
-      if (role === 'assistant') conversation.lastResponderRoute = routeById(options.responderRoute).id;
         durationMs: role === 'assistant' ? Math.max(0, Number(options.durationMs) || 0) : 0,
         responderRoute: role === 'assistant' ? routeById(options.responderRoute).id : 'auto',
         responderVerified: role === 'assistant' && Boolean(options.responderVerified),
@@ -1744,10 +1732,6 @@
       }
     }
 
-    function createResponseTools(text, durationMs, archive = false) {
-      const tools = document.createElement('div');
-      tools.className = archive ? 'archive-response-tools' : 'schoolai-response-tools';
-      const duration = document.createElement('span');
     function createResponseTools(text, durationMs, responderRoute = 'auto', responderVerified = false, archive = false) {
       const tools = document.createElement('div');
       tools.className = archive ? 'archive-response-tools' : 'schoolai-response-tools';
@@ -1768,12 +1752,10 @@
       copyButton.setAttribute('aria-label', '답변 복사');
       copyButton.title = '복사';
       copyButton.addEventListener('click', () => copyResponseText(text, copyButton));
-      tools.append(duration, copyButton);
       tools.append(responder, duration, copyButton);
       return tools;
     }
 
-    function decorateLatestAssistantActivity(webChatMount, text, durationMs, attempt = 0) {
     function decorateLatestAssistantActivity(webChatMount, text, durationMs, responderRoute = 'auto', responderVerified = false, attempt = 0) {
       if (!webChatMount) return;
       const greetingText = cleanText(CONFIG.GREETING_MESSAGE).replace(/\s+/g, ' ').trim();
@@ -1798,10 +1780,6 @@
         const block = document.createElement('div');
         block.className = 'schoolai-response-block';
         bubble.parentNode.insertBefore(block, bubble);
-        block.append(bubble, createResponseTools(text, durationMs));
-        return;
-      }
-      if (attempt < 30) setTimeout(() => decorateLatestAssistantActivity(webChatMount, text, durationMs, attempt + 1), 50);
         block.append(bubble, createResponseTools(text, durationMs, responderRoute, responderVerified));
         return;
       }
@@ -1997,7 +1975,6 @@
           const bubble = document.createElement('div');
           bubble.className = 'archive-bubble'; bubble.textContent = message.text;
           row.append(role, bubble);
-          if (message.role === 'assistant') row.append(createResponseTools(message.text, message.durationMs, true));
           if (message.role === 'assistant') {
             row.append(createResponseTools(message.text, message.durationMs, message.responderRoute, message.responderVerified, true));
           }
@@ -2133,7 +2110,6 @@
           }
         });
         if (message.role === 'assistant') {
-          setTimeout(() => decorateLatestAssistantActivity(webChatMount, message.text, message.durationMs || 0), 40 + index * 8);
           setTimeout(() => decorateLatestAssistantActivity(
             webChatMount, message.text, message.durationMs || 0,
             message.responderRoute, message.responderVerified, 0
@@ -2257,12 +2233,6 @@
                 responseStartedAt = 0;
                 state.responseInProgress = false;
                 stopWorkingTimer();
-                const confirmedResponderRoute = responder.route !== 'auto'
-                  ? responder.route
-                  : conversation.route;
-                addMessage('assistant', responder.text, {
-                  durationMs,
-                  responderRoute: confirmedResponderRoute
                 addMessage('assistant', responder.text, {
                   durationMs,
                   responderRoute: responder.route,
@@ -2276,7 +2246,6 @@
                   }
                 };
                 const result = next(cleanAction);
-                requestAnimationFrame(() => decorateLatestAssistantActivity(webChatMount, responder.text, durationMs));
                 requestAnimationFrame(() => decorateLatestAssistantActivity(
                   webChatMount, responder.text, durationMs,
                   responder.route, responder.route !== 'auto'
