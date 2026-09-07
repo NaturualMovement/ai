@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="color-scheme" content="light">
+  <meta name="color-scheme" content="light dark">
   <meta name="description" content="학교 구성원을 위한 멀티 모델 AI 채팅 서비스">
   <title>Multi Model AI Agent</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%A8%3C/text%3E%3C/svg%3E">
@@ -1239,6 +1239,35 @@
     .model-menu-check { color: #222; font-size: 13px; opacity: 0; }
     .model-menu-item[aria-selected="true"] .model-menu-check { opacity: 1; }
 
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .theme-toggle {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 38px;
+      border: 1px solid rgba(20, 20, 20, .08);
+      border-radius: 12px;
+      color: #4b5563;
+      background: rgba(255, 255, 255, .56);
+      cursor: pointer;
+      transition: color var(--ease), background var(--ease), border-color var(--ease), transform var(--ease);
+    }
+
+    .theme-toggle:hover {
+      color: #202020;
+      border-color: rgba(79, 106, 240, .2);
+      background: rgba(255, 255, 255, .86);
+      transform: translateY(-1px);
+    }
+
+    .theme-toggle-icon { font-size: 17px; line-height: 1; }
+
     .archive-view { background: transparent; }
     .archive-note { max-width: 820px; border: 0; background: #f3f3f3; }
     .archive-message { max-width: 820px; }
@@ -1259,6 +1288,161 @@
       .model-picker-button { max-width: 130px; }
       .model-picker-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     }
+  </style>
+  <style id="schoolai-dark-mode">
+    html[data-theme="dark"] { color-scheme: dark; }
+
+    html[data-theme="dark"] body {
+      --page: #0c1119;
+      --page-accent: #111827;
+      --glass: rgba(19, 26, 38, .76);
+      --glass-strong: rgba(24, 32, 46, .92);
+      --line: rgba(255, 255, 255, .08);
+      --line-strong: rgba(255, 255, 255, .14);
+      --ink: #edf2f7;
+      --muted: #a8b2c1;
+      --quiet: #7f8a9a;
+      --accent: #8295ff;
+      --accent-soft: rgba(130, 149, 255, .14);
+      background: #0c1119;
+    }
+
+    html[data-theme="dark"] body::before {
+      background:
+        radial-gradient(42rem 42rem at 10% 6%, rgba(76, 95, 180, .22), transparent 61%),
+        radial-gradient(39rem 39rem at 91% 10%, rgba(126, 65, 113, .18), transparent 60%),
+        radial-gradient(46rem 46rem at 72% 96%, rgba(43, 117, 111, .16), transparent 62%),
+        radial-gradient(31rem 31rem at 18% 92%, rgba(132, 93, 44, .12), transparent 61%);
+    }
+
+    html[data-theme="dark"] .sidebar,
+    html[data-theme="dark"] .main {
+      border-color: rgba(255, 255, 255, .075);
+      background: rgba(17, 23, 34, .9);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .26);
+    }
+
+    html[data-theme="dark"] .topbar,
+    html[data-theme="dark"] .statusbar {
+      border-color: rgba(255, 255, 255, .07);
+      background: rgba(17, 23, 34, .68);
+    }
+
+    html[data-theme="dark"] .workspace {
+      background: linear-gradient(180deg, rgba(18, 25, 37, .74), rgba(12, 17, 25, .9));
+    }
+
+    html[data-theme="dark"] .new-chat,
+    html[data-theme="dark"] .secondary-button,
+    html[data-theme="dark"] .mobile-menu,
+    html[data-theme="dark"] .theme-toggle {
+      color: var(--ink);
+      border-color: rgba(255, 255, 255, .1);
+      background: rgba(255, 255, 255, .055);
+    }
+
+    html[data-theme="dark"] .new-chat:hover,
+    html[data-theme="dark"] .theme-toggle:hover {
+      color: #fff;
+      border-color: rgba(130, 149, 255, .28);
+      background: rgba(255, 255, 255, .09);
+    }
+
+    html[data-theme="dark"] .chat-item:hover,
+    html[data-theme="dark"] .chat-item[aria-current="true"] {
+      color: var(--ink);
+      background: rgba(255, 255, 255, .065);
+      box-shadow: none;
+    }
+
+    html[data-theme="dark"] .state-card,
+    html[data-theme="dark"] .empty-card,
+    html[data-theme="dark"] .toast,
+    html[data-theme="dark"] .archive-note {
+      color: var(--ink);
+      border-color: rgba(255, 255, 255, .08);
+      background: rgba(23, 31, 44, .94);
+      box-shadow: 0 18px 55px rgba(0, 0, 0, .24);
+    }
+
+    html[data-theme="dark"] .archive-bubble {
+      color: var(--ink);
+      border-color: rgba(255, 255, 255, .08);
+      background: rgba(255, 255, 255, .055);
+    }
+
+    html[data-theme="dark"] .archive-message.user .archive-bubble,
+    html[data-theme="dark"] #webchat .webchat__bubble--from-user {
+      color: #edf2f7 !important;
+      border-color: transparent !important;
+      background: #293244 !important;
+    }
+
+    html[data-theme="dark"] .instant-greeting-message,
+    html[data-theme="dark"] #webchat .webchat__text-content,
+    html[data-theme="dark"] #webchat .webchat__render-markdown,
+    html[data-theme="dark"] #webchat .webchat__render-markdown a {
+      color: #e8edf5 !important;
+    }
+
+    html[data-theme="dark"] #webchat .webchat__render-markdown a { color: #9fb0ff !important; }
+
+    html[data-theme="dark"] #webchat .webchat__send-box {
+      border-color: rgba(255, 255, 255, .11) !important;
+      background: rgba(25, 33, 46, .98) !important;
+      box-shadow: 0 12px 34px rgba(0, 0, 0, .28);
+    }
+
+    html[data-theme="dark"] #webchat .webchat__send-box-text-box__input {
+      color: #f1f5f9 !important;
+      caret-color: #aab7ff;
+    }
+
+    html[data-theme="dark"] #webchat .webchat__send-box-text-box__input::placeholder { color: #7f8a9a !important; }
+    html[data-theme="dark"] #webchat .webchat__send-box__button:not(:last-child),
+    html[data-theme="dark"] #webchat .webchat__send-box__button:not(:last-child) > button { color: #d8dee9 !important; }
+    html[data-theme="dark"] #webchat .webchat__send-box__button:last-child { color: #e8edf5 !important; }
+    html[data-theme="dark"] #webchat .webchat__send-box__button:last-child:hover { background: rgba(255, 255, 255, .08) !important; }
+    html[data-theme="dark"] #webchat .webchat__send-box__button:last-child svg { fill: #e8edf5 !important; }
+
+    html[data-theme="dark"] .model-picker-button { color: #bcc5d2; }
+    html[data-theme="dark"] .model-picker-button:hover,
+    html[data-theme="dark"] .model-picker-button[aria-expanded="true"] {
+      color: #fff;
+      background: rgba(255, 255, 255, .075);
+    }
+
+    html[data-theme="dark"] .model-picker-menu {
+      color: var(--ink);
+      border-color: rgba(255, 255, 255, .1);
+      background: rgba(24, 32, 45, .98);
+      box-shadow: 0 20px 55px rgba(0, 0, 0, .38);
+    }
+
+    html[data-theme="dark"] .model-menu-item { color: #edf2f7; }
+    html[data-theme="dark"] .model-menu-item:hover,
+    html[data-theme="dark"] .model-menu-item[aria-selected="true"] { background: rgba(255, 255, 255, .075); }
+    html[data-theme="dark"] .model-menu-copy span { color: #929dad; }
+    html[data-theme="dark"] .model-menu-check { color: #dbe3ee; }
+
+    html[data-theme="dark"] .requested-model-badge,
+    html[data-theme="dark"] .responder-badge {
+      color: #bdc7d5;
+      background: rgba(255, 255, 255, .07);
+    }
+
+    html[data-theme="dark"] .responder-badge.verified {
+      color: #bdc7ff;
+      background: rgba(130, 149, 255, .15);
+    }
+
+    html[data-theme="dark"] .response-copy-button { color: #aeb8c6; }
+    html[data-theme="dark"] .response-copy-button:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, .075);
+    }
+
+    html[data-theme="dark"] .sidebar-scrim { background: rgba(0, 0, 0, .52); }
   </style>
 </head>
 <body>
@@ -1286,7 +1470,12 @@
             <div class="session-title" id="sessionTitle">새 대화</div>
           </div>
         </div>
-        <span class="route-badge" id="routeBadge" hidden>연결 대상 · Auto</span>
+        <div class="topbar-actions">
+          <span class="route-badge" id="routeBadge" hidden>연결 대상 · Auto</span>
+          <button class="theme-toggle" id="themeToggle" type="button" aria-label="다크모드로 전환" title="다크모드로 전환">
+            <span class="theme-toggle-icon" id="themeToggleIcon" aria-hidden="true">☾</span>
+          </button>
+        </div>
       </header>
 
       <section class="workspace" id="workspace" aria-live="polite">
@@ -1334,6 +1523,7 @@
       SERVICE_NAME: 'Multi Model AI Agent',
       GREETING_MESSAGE: '안녕하세요 👋 무엇을 도와드릴까요? 🤓',
       STORAGE_KEY: 'schoolai.conversations',
+      THEME_STORAGE_KEY: 'schoolai.theme',
       STORAGE_SCHEMA_VERSION: 2,
       ORCHESTRATOR_ROUTE: 'auto',
       ROUTE_PROTOCOL_VERSION: 1,
@@ -1370,6 +1560,7 @@
       modelSelect: $('#modelSelect'), routeBadge: $('#routeBadge'),
       composerModelLayer: $('#composerModelLayer'), modelPickerButton: $('#modelPickerButton'),
       modelPickerGlyph: $('#modelPickerGlyph'), modelPickerLabel: $('#modelPickerLabel'), modelPickerMenu: $('#modelPickerMenu'),
+      themeToggle: $('#themeToggle'), themeToggleIcon: $('#themeToggleIcon'),
       sessionTitle: $('#sessionTitle'),
       connectionStatus: $('#connectionStatus'), responseLoader: $('#responseLoader'),
       responseLoaderTime: $('#responseLoaderTime'), toast: $('#toast')
@@ -1410,6 +1601,32 @@
     function cleanText(value, max = 12000) {
       if (typeof value !== 'string') return '';
       return value.replace(/\u0000/g, '').slice(0, max);
+    }
+
+    function initialTheme() {
+      try {
+        const saved = localStorage.getItem(CONFIG.THEME_STORAGE_KEY);
+        if (saved === 'light' || saved === 'dark') return saved;
+      } catch (_) {}
+      return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function applyTheme(theme, persist = false) {
+      const nextTheme = theme === 'dark' ? 'dark' : 'light';
+      document.documentElement.dataset.theme = nextTheme;
+      const isDark = nextTheme === 'dark';
+      elements.themeToggleIcon.textContent = isDark ? '☀' : '☾';
+      elements.themeToggle.setAttribute('aria-pressed', String(isDark));
+      elements.themeToggle.setAttribute('aria-label', isDark ? '라이트모드로 전환' : '다크모드로 전환');
+      elements.themeToggle.title = isDark ? '라이트모드로 전환' : '다크모드로 전환';
+      if (persist) {
+        try { localStorage.setItem(CONFIG.THEME_STORAGE_KEY, nextTheme); }
+        catch (_) { showToast('테마 설정을 저장하지 못했습니다.'); }
+      }
+    }
+
+    function toggleTheme() {
+      applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark', true);
     }
 
     function hasSubmittedUserMessage(conversation) {
@@ -2463,6 +2680,7 @@
     $('#newChatButton').addEventListener('click', () => createConversation(elements.modelSelect.value || 'auto'));
     elements.modelSelect.addEventListener('change', event => changeModel(event.target.value));
     elements.modelPickerButton.addEventListener('click', toggleModelPicker);
+    elements.themeToggle.addEventListener('click', toggleTheme);
     document.addEventListener('click', event => {
       if (!event.target.closest('#modelPicker')) closeModelPicker();
     });
@@ -2475,6 +2693,7 @@
 
     document.title = CONFIG.SERVICE_NAME;
     $('#brandName').textContent = CONFIG.SERVICE_NAME;
+    applyTheme(initialTheme());
     populateModelSelect();
     state.conversations = safeLoad();
     state.conversations.forEach(refreshConversationTitle);
