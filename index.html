@@ -821,11 +821,18 @@
       max-width: 100% !important;
     }
 
+    .model-routing-badges {
+      display: inline-flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .requested-model-badge,
     .responder-badge {
       display: inline-flex;
       align-items: center;
       min-height: 22px;
-      margin: 7px 0 2px;
       padding: 3px 8px;
       border-radius: 999px;
       color: #475467;
@@ -833,6 +840,11 @@
       font-size: 10.5px;
       font-weight: 650;
       line-height: 1.2;
+    }
+
+    .requested-model-badge {
+      color: #344054;
+      background: #eef2f6;
     }
 
     .responder-badge.verified {
@@ -1431,6 +1443,7 @@
             text: cleanText(message.text),
             at: Number(message.at) || Date.now(),
             durationMs: Math.max(0, Number(message.durationMs) || 0),
+            requestedRoute: routeById(message.requestedRoute).id,
             responderRoute: routeById(message.responderRoute).id,
             responderVerified: Boolean(message.responderVerified),
             carried: Boolean(message.carried)
@@ -1575,6 +1588,7 @@
         text: safeText,
         at: Date.now(),
         durationMs: role === 'assistant' ? Math.max(0, Number(options.durationMs) || 0) : 0,
+        requestedRoute: role === 'assistant' ? routeById(options.requestedRoute).id : 'auto',
         responderRoute: role === 'assistant' ? routeById(options.responderRoute).id : 'auto',
         responderVerified: role === 'assistant' && Boolean(options.responderVerified),
         carried: false
@@ -1732,17 +1746,24 @@
       }
     }
 
-    function createResponseTools(text, durationMs, responderRoute = 'auto', responderVerified = false, archive = false) {
+    function createResponseTools(text, durationMs, requestedRoute = 'auto', responderRoute = 'auto', responderVerified = false, archive = false) {
       const tools = document.createElement('div');
       tools.className = archive ? 'archive-response-tools' : 'schoolai-response-tools';
+      const routing = document.createElement('span');
+      routing.className = 'model-routing-badges';
+      const requested = document.createElement('span');
+      requested.className = 'requested-model-badge';
+      requested.textContent = '요청 모델 · ' + routeById(requestedRoute).label;
+      requested.title = '질문을 보낼 때 사용자가 선택한 모델입니다.';
       const responder = document.createElement('span');
       responder.className = 'responder-badge' + (responderVerified ? ' verified' : '');
       responder.textContent = responderVerified
-        ? '응답 모델 · ' + routeById(responderRoute).label
-        : '응답 모델 · 확인되지 않음';
+        ? '실제 응답 모델 · ' + routeById(responderRoute).label
+        : '실제 응답 모델 · 제공되지 않음';
       responder.title = responderVerified
         ? '부모 에이전트가 응답 표식으로 확인한 모델입니다.'
         : '부모 에이전트의 응답 표식이 없어 실제 응답 모델을 확인하지 못했습니다.';
+      routing.append(requested, responder);
       const duration = document.createElement('span');
       duration.className = 'response-duration';
       duration.textContent = formatResponseDuration(durationMs);
@@ -1752,11 +1773,11 @@
       copyButton.setAttribute('aria-label', '답변 복사');
       copyButton.title = '복사';
       copyButton.addEventListener('click', () => copyResponseText(text, copyButton));
-      tools.append(responder, duration, copyButton);
+      tools.append(routing, duration, copyButton);
       return tools;
     }
 
-    function decorateLatestAssistantActivity(webChatMount, text, durationMs, responderRoute = 'auto', responderVerified = false, attempt = 0) {
+    function decorateLatestAssistantActivity(webChatMount, text, durationMs, requestedRoute = 'auto', responderRoute = 'auto', responderVerified = false, attempt = 0) {
       if (!webChatMount) return;
       const greetingText = cleanText(CONFIG.GREETING_MESSAGE).replace(/\s+/g, ' ').trim();
       const expectedText = cleanText(text).replace(/\s+/g, ' ').trim();
@@ -1780,11 +1801,11 @@
         const block = document.createElement('div');
         block.className = 'schoolai-response-block';
         bubble.parentNode.insertBefore(block, bubble);
-        block.append(bubble, createResponseTools(text, durationMs, responderRoute, responderVerified));
+        block.append(bubble, createResponseTools(text, durationMs, requestedRoute, responderRoute, responderVerified));
         return;
       }
       if (attempt < 30) {
-        setTimeout(() => decorateLatestAssistantActivity(webChatMount, text, durationMs, responderRoute, responderVerified, attempt + 1), 50);
+        setTimeout(() => decorateLatestAssistantActivity(webChatMount, text, durationMs, requestedRoute, responderRoute, responderVerified, attempt + 1), 50);
       }
     }
 
@@ -1976,7 +1997,10 @@
           bubble.className = 'archive-bubble'; bubble.textContent = message.text;
           row.append(role, bubble);
           if (message.role === 'assistant') {
-            row.append(createResponseTools(message.text, message.durationMs, message.responderRoute, message.responderVerified, true));
+            row.append(createResponseTools(
+              message.text, message.durationMs, message.requestedRoute,
+              message.responderRoute, message.responderVerified, true
+            ));
           }
           view.append(row);
         });
@@ -2112,7 +2136,7 @@
         if (message.role === 'assistant') {
           setTimeout(() => decorateLatestAssistantActivity(
             webChatMount, message.text, message.durationMs || 0,
-            message.responderRoute, message.responderVerified, 0
+            message.requestedRoute, message.responderRoute, message.responderVerified, 0
           ), 40 + index * 8);
         }
       });
@@ -2170,6 +2194,7 @@
         state.webUserId = webUserId;
         let suppressFirstRemoteBotMessage = true;
         let responseStartedAt = 0;
+        let responseRequestedRoute = conversation.route;
         let webChatMount = null;
 
         const store = window.WebChat.createStore({}, () => next => action => {
@@ -2235,6 +2260,7 @@
                 stopWorkingTimer();
                 addMessage('assistant', responder.text, {
                   durationMs,
+                  requestedRoute: responseRequestedRoute,
                   responderRoute: responder.route,
                   responderVerified: responder.route !== 'auto'
                 });
@@ -2248,7 +2274,7 @@
                 const result = next(cleanAction);
                 requestAnimationFrame(() => decorateLatestAssistantActivity(
                   webChatMount, responder.text, durationMs,
-                  responder.route, responder.route !== 'auto'
+                  responseRequestedRoute, responder.route, responder.route !== 'auto'
                 ));
                 return result;
               }
@@ -2256,6 +2282,7 @@
           }
           if (action.type === 'WEB_CHAT/SEND_MESSAGE' && action.payload && action.payload.text) {
             responseStartedAt = Date.now();
+            responseRequestedRoute = conversation.route;
             state.responseInProgress = true;
             conversation.lastResponderRoute = conversation.route === 'auto' ? 'auto' : conversation.route;
             updateHeader(conversation);
@@ -2288,6 +2315,7 @@
                         displayText,
                         route: conversation.route,
                         target: routeById(conversation.route).target,
+                        requestedRoute: conversation.route,
                         hasAttachments
                       }
                     }
@@ -2298,6 +2326,7 @@
           }
           if (action.type === 'WEB_CHAT/SEND_FILES') {
             responseStartedAt = Date.now();
+            responseRequestedRoute = conversation.route;
             state.responseInProgress = true;
             setResponseLoading(true);
             startWorkingTimer(responseStartedAt);
